@@ -98,7 +98,7 @@ public class HueGenericBindingProvider extends AbstractGenericBindingProvider
 
 				if (item instanceof ColorItem) {
 					BindingConfig hueBindingConfig = (BindingConfig) new HueBindingConfig(
-							configParts[0], BindingType.rgb.name(), null,null);
+							configParts[0], BindingType.rgb.name(), null, configParts.length < 4 ? null : configParts[3]);
 					addBindingConfig(item, hueBindingConfig);
 				} else if (item instanceof DimmerItem) {
 					BindingConfig hueBindingConfig = (BindingConfig) new HueBindingConfig(
