@@ -42,6 +42,7 @@ import org.slf4j.LoggerFactory;
  * 
  * @author Roman Hartmann
  * @author Jos Schering
+ * @author Joerg Dembski
  * @since 1.2.0
  */
 public class HueBinding extends AbstractActiveBinding<HueBindingProvider> implements ManagedService {
@@ -205,7 +206,7 @@ public class HueBinding extends AbstractActiveBinding<HueBindingProvider> implem
 		}
 
 		if (command instanceof OnOffType) {
-			bulb.switchOn(OnOffType.ON.equals(command));
+			bulb.switchOn(OnOffType.ON.equals(command), deviceConfig.getTransitionTime());
 		}
 
 		if (command instanceof HSBType) {
@@ -214,29 +215,29 @@ public class HueBinding extends AbstractActiveBinding<HueBindingProvider> implem
 			PercentType sat = hsbCommand.getSaturation();
 			PercentType bri = hsbCommand.getBrightness();
 			bulb.colorizeByHSB(hue.doubleValue() / 360,
-					sat.doubleValue() / 100, bri.doubleValue() / 100);
+					sat.doubleValue() / 100, bri.doubleValue() / 100, deviceConfig.getTransitionTime());
 		}
 
 		if (deviceConfig.getType().equals(BindingType.brightness)
 				|| deviceConfig.getType().equals(BindingType.rgb)) {
 			if (IncreaseDecreaseType.INCREASE.equals(command)) {
-				int resultingValue = bulb.increaseBrightness(deviceConfig.getStepSize());
+				int resultingValue = bulb.increaseBrightness(deviceConfig.getStepSize(),deviceConfig.getTransitionTime());
 				eventPublisher.postUpdate(itemName, new PercentType(resultingValue));
 			} else if (IncreaseDecreaseType.DECREASE.equals(command)) {
-				int resultingValue = bulb.decreaseBrightness(deviceConfig.getStepSize());
+				int resultingValue = bulb.decreaseBrightness(deviceConfig.getStepSize(), deviceConfig.getTransitionTime());
 				eventPublisher.postUpdate(itemName, new PercentType(resultingValue));
 			} else if ((command instanceof PercentType) && !(command instanceof HSBType)) {
-				bulb.setBrightness((int)Math.round((double)255 / (double)100 * ((PercentType) command).intValue()));
+				bulb.setBrightness((int)Math.round((double)255 / (double)100 * ((PercentType) command).intValue()), deviceConfig.getTransitionTime());
 			}
 		}
 
 		if (deviceConfig.getType().equals(BindingType.colorTemperature)) {
 			if (IncreaseDecreaseType.INCREASE.equals(command)) {
-				bulb.increaseColorTemperature(deviceConfig.getStepSize());
+				bulb.increaseColorTemperature(deviceConfig.getStepSize(), deviceConfig.getTransitionTime());
 			} else if (IncreaseDecreaseType.DECREASE.equals(command)) {
-				bulb.decreaseColorTemperature(deviceConfig.getStepSize());
+				bulb.decreaseColorTemperature(deviceConfig.getStepSize(), deviceConfig.getTransitionTime());
 			} else if (command instanceof PercentType) {
-				bulb.setColorTemperature((int)Math.round((((double)346 / (double)100) * ((PercentType) command).intValue()) + 154));
+				bulb.setColorTemperature((int)Math.round((((double)346 / (double)100) * ((PercentType) command).intValue()) + 154), deviceConfig.getTransitionTime());
 			}
 		}
 

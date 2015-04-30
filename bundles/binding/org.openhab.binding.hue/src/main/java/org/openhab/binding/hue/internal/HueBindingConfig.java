@@ -31,9 +31,15 @@ import org.slf4j.LoggerFactory;
  * <li>RGB</li>
  * <li>The optionally configurable step size that will be used when the bulb is
  * dimmed up or down. Default is 25.</li>
+ * <li>The optionally configurable transition time that will be used then dimming the 
+ * light up or down. Default is -1 which means that no transition time will be sent
+ * to the HUE bridge. Set the transition time to 0 if you are using Osram Lightify 
+ * bulb that do not switch off when setting the brightness to 0, such as the Osram 
+ * Lightify surface lights.</li> 
  * </ul>
  * 
  * @author Roman Hartmann
+ * @author Joerg Dembski
  * @since 1.2.0
  */
 public class HueBindingConfig implements BindingConfig {
@@ -71,6 +77,11 @@ public class HueBindingConfig implements BindingConfig {
 	private final int stepSize;
 	
 	/**
+	 * The optionally configurable transition time that will be used. 
+	 */
+	private final int transitionTime;
+	
+	/**
 	 * On / Off Item State
 	 */
 	public OnOffType itemStateOnOffType;
@@ -101,9 +112,13 @@ public class HueBindingConfig implements BindingConfig {
 	 * @param stepSize
 	 *            The optionally configurable step size that will be used when
 	 *            the bulb is dimmed up or down. Default is 25.
+   	 * @param transitionTime
+	 * 			  The optionally configurable transition time what will be used
+	 * 			  when dimming the bulb up or down. Default is set to -1 which means
+	 * 			  that no transition time will be sent when executing commands.	             
 	 * @throws BindingConfigParseException
 	 */
-	public HueBindingConfig(String deviceNumber, String type, String stepSize)
+	public HueBindingConfig(String deviceNumber, String type, String stepSize, String transistionTime)
 			throws BindingConfigParseException {
 
 		this.deviceNumber = parseDeviceNumberConfigString(deviceNumber);
@@ -120,6 +135,11 @@ public class HueBindingConfig implements BindingConfig {
 			this.stepSize = 25;
 		}
 
+		if (transistionTime != null) {
+			this.transitionTime = parseTransitionTimeConfigString(transistionTime);
+		} else {
+			this.transitionTime = 4;
+		}
 	}
 
 	/**
@@ -140,6 +160,25 @@ public class HueBindingConfig implements BindingConfig {
 		}
 	}
 
+	/**
+	 * Parses a transition time string that has been found in the configuration.
+	 * 
+	 * @param configString
+	 *            The transition time duration as a string.
+	 * @return The transition time as an integer value.
+	 * @throws BindingConfigParseException
+	 */
+	private int parseTransitionTimeConfigString(String configString)
+			throws BindingConfigParseException {
+		try {
+			return Integer.parseInt(configString);
+		} catch (Exception e) {
+			throw new BindingConfigParseException(
+					"Error parsing transition times.");
+		}
+	}
+	
+	
 	/**
 	 * Parses a binding type string that has been found in the configuration. If
 	 * the string could not be parsed, the switch type is returned as default.
@@ -202,6 +241,14 @@ public class HueBindingConfig implements BindingConfig {
 	 */
 	public int getStepSize() {
 		return stepSize;
+	}
+
+	/*
+	 * @return The transition time that has been declared in the binding
+	 *         configuration. 
+	*/	
+	public int getTransitionTime() {
+		return transitionTime;	
 	}
 
 }

@@ -34,22 +34,28 @@ import org.slf4j.LoggerFactory;
  * <ul>
  * <li><code>{hue="1"}</code> - Connects to bulb 1 and switches the bulb without
  * changing the color or brightness.</li>
+ * <li><code>{hue="1;switch;0;0"}</code> - Connects to bulb 1 and switches the bulb without
+ * changing the color or brightness, but set the transition time to "0" (Default is 4). This setting is needed to properly switch off the light if the bulb is a Osram Lightify Surface Light.</li>
  * <li>
- * <code>{hue="1;brightness"} - Connects to bulb 1 and dims the bulbs brightness without changing the color. The step size set to default (25).</code>
+ * <code>{hue="1;brightness"}</code> - Connects to bulb 1 and dims the bulbs brightness without changing the color. The step size set to default (25).
  * </li>
  * <li>
- * <code>{hue="1;brightness;30"} - Connects to bulb 1 and dims the bulbs brightness without changing the color. The step size is set to 30.</code>
+ * <code>{hue="1;brightness;30"}</code> - Connects to bulb 1 and dims the bulbs brightness without changing the color. The step size is set to 30.
  * </li>
  * <li>
- * <code>{hue="1;colorTemperature"} - Connects to bulb 1 and dims the bulbs color temperature without changing the brightness. The step size set to default (25).</code>
+ * <code>{hue="1;brightness;25;0"}</code> - Connects to bulb 1 and dims the bulbs brightness without changing the color. The step size is set to default (25).The transition time is set to 0 (default is 4). This setting is needed to properly switch off the light if the bulb is a Osram Lightify Surface Light.
  * </li>
  * <li>
- * <code>{hue="1;colorTemperature;30"} - Connects to bulb 1 and dims the bulbs color temperature without changing the brightness. The step size is set to 30.</code>
+ * <code>{hue="1;colorTemperature"}</code> - Connects to bulb 1 and dims the bulbs color temperature without changing the brightness. The step size set to default (25).
+ * </li>
+ * <li>
+ * <code>{hue="1;colorTemperature;30"}</code> - Connects to bulb 1 and dims the bulbs color temperature without changing the brightness. The step size is set to 30.
  * </li>
  * </ul>
  * 
  * @author Roman Hartmann
  * @author Jos Schering
+ * @author Joerg Dembski
  * @since 1.2.0
  */
 public class HueGenericBindingProvider extends AbstractGenericBindingProvider
@@ -92,17 +98,17 @@ public class HueGenericBindingProvider extends AbstractGenericBindingProvider
 
 				if (item instanceof ColorItem) {
 					BindingConfig hueBindingConfig = (BindingConfig) new HueBindingConfig(
-							configParts[0], BindingType.rgb.name(), null);
+							configParts[0], BindingType.rgb.name(), null,null);
 					addBindingConfig(item, hueBindingConfig);
 				} else if (item instanceof DimmerItem) {
 					BindingConfig hueBindingConfig = (BindingConfig) new HueBindingConfig(
 							configParts[0], configParts.length < 2 ? null
 									: configParts[1],
-							configParts.length < 3 ? null : configParts[2]);
+							configParts.length < 3 ? null : configParts[2], configParts.length < 4 ? null : configParts[3]);
 					addBindingConfig(item, hueBindingConfig);
 				} else if (item instanceof SwitchItem) {
 					BindingConfig hueBindingConfig = (BindingConfig) new HueBindingConfig(
-							configParts[0], BindingType.switching.name(), null);
+							configParts[0], BindingType.switching.name(), null, configParts.length < 4 ? null : configParts[3]);
 					addBindingConfig(item, hueBindingConfig);
 				}
 

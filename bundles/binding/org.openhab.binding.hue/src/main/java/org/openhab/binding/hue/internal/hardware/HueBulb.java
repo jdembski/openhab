@@ -23,6 +23,7 @@ import com.sun.jersey.api.client.WebResource;
  * @author Roman Hartmann
  * @author Kai Kreuzer
  * @author Jos Schering
+ * @author Joerg Dembski
  * @since 1.2.0
  * 
  */
@@ -88,9 +89,11 @@ public class HueBulb {
 	 *            The saturation of the color. (0..1)
 	 * @param newBrightness
 	 *            The brightness of the color. (0..1)
+	 * @param transitionTime
+	 *            The transition time for when the color is set.
 	 */
 	public void colorizeByHSB(double newHue, double newSaturation,
-			double newBrightness) {
+			double newBrightness, int transistionTime) {
 
 		int newHueCalculated = new Long(Math.round(newHue * 360.0 * 182.0))
 				.intValue();
@@ -100,7 +103,7 @@ public class HueBulb {
 				Math.round(newBrightness * 255.0)).intValue();
 
 		colorizeByHSBInternally(newHueCalculated, newSaturationCalculated,
-				newBrightnessCalculated);
+				newBrightnessCalculated, transistionTime);
 	}
 
 	/**
@@ -109,10 +112,12 @@ public class HueBulb {
 	 * 
 	 * @param amount
 	 *            The amount by which the brightness shall be increased.
+	 * @param transitionTime
+	 * 			  The transition time when the brightness shall be increased.
 	 * @return The resulting brightness in percent 0-100
 	 */
-	public int increaseBrightness(int amount) {
-		return setBrightness(this.brightness + amount);
+	public int increaseBrightness(int amount, int transitionTime) {
+		return setBrightness(this.brightness + amount, transitionTime);
 	}
 
 	/**
@@ -121,10 +126,12 @@ public class HueBulb {
 	 * 
 	 * @param amount
 	 *            The amount by which the brightness shall be decreased.
+	 * @param transitionTime
+	 * 			  The transition time when the brightness shall be decreased.	             
 	 * @return The resulting brightness in percent 0-100
 	 */
-	public int decreaseBrightness(int amount) {
-		return setBrightness(this.brightness - amount);
+	public int decreaseBrightness(int amount, int transistionTime) {
+		return setBrightness(this.brightness - amount, transistionTime);
 	}
 
 	/**
@@ -133,9 +140,11 @@ public class HueBulb {
 	 * 
 	 * @param brightness
 	 *            The new brightness.
+	 * @param transitionTime
+	 * 			  The transition time for setting the new brightness.
 	 * @return The resulting brightness in percent 0-100
 	 */
-	public int setBrightness(int brightness) {
+	public int setBrightness(int brightness, int transitionTime) {
 
 		this.brightness = brightness;
 		this.brightness = this.brightness < 0 ? 0 : this.brightness;
@@ -143,10 +152,10 @@ public class HueBulb {
 
 		if (this.brightness > 0) {
 			this.isOn = true;
-			executeMessage("{\"bri\":" + this.brightness + ",\"on\":true}");
+			executeMessage("{\"bri\":" + this.brightness + ",\"on\":true,\"transitiontime\":" + transitionTime + "}");
 		} else {
 			this.isOn = false;
-			executeMessage("{\"on\":false}");
+			executeMessage("{\"on\":false,\"transitiontime\":" + transitionTime + "}");
 		}
 
 		return (int) Math.round((100.0 / 255.0) * this.brightness);
@@ -160,12 +169,12 @@ public class HueBulb {
 	 * 			false	turn bulb off
 	 */
 	
-	public boolean switchOn(boolean powerOn) {
+	public boolean switchOn(boolean powerOn, int transitionTime) {
 		this.isOn = powerOn;
 		if(powerOn) {
-			executeMessage("{\"on\":true}");
+			executeMessage("{\"bri\":" + this.brightness + ",\"on\":true,\"transitiontime\":" + transitionTime + "}");
 		} else {
-			executeMessage("{\"on\":false}");
+			executeMessage("{\"on\":false,\"transitiontime\":" + transitionTime + "}");
 		}
 		return true;
 	}
@@ -176,9 +185,11 @@ public class HueBulb {
 	 * 
 	 * @param amount
 	 *            The amount by which the color brightness shall be increased.
+	 * @param transitionTime
+	 *            The transition time for when the color brightness is set.
 	 */
-	public void increaseColorTemperature(int amount) {
-		setColorTemperature(this.colorTemperature + amount);
+	public void increaseColorTemperature(int amount, int transitionTime) {
+		setColorTemperature(this.colorTemperature + amount, transitionTime);
 	}
 
 	/**
@@ -187,9 +198,11 @@ public class HueBulb {
 	 * 
 	 * @param amount
 	 *            The amount by which the color brightness shall be decreased.
+	 * @param transitionTime
+	 *            The transition time for when the color brightness is set.
 	 */
-	public void decreaseColorTemperature(int amount) {
-		setColorTemperature(this.colorTemperature - amount);
+	public void decreaseColorTemperature(int amount, int transitionTime) {
+		setColorTemperature(this.colorTemperature - amount, transitionTime);
 	}
 
 	/**
@@ -198,7 +211,7 @@ public class HueBulb {
 	 * @param temperature
 	 *            The amount by which the color brightness shall be decreased.
 	 */
-	public void setColorTemperature(int temperature) {
+	public void setColorTemperature(int temperature, int transitionTime) {
 
 		this.colorTemperature = temperature;
 		this.colorTemperature = this.colorTemperature < 154 ? 154
@@ -206,7 +219,7 @@ public class HueBulb {
 		this.colorTemperature = this.colorTemperature > 500 ? 500
 				: this.colorTemperature;
 
-		executeMessage("{\"ct\":" + this.colorTemperature + "}");
+		executeMessage("{\"ct\":" + this.colorTemperature + ", \"transitiontime\":" + transitionTime + "}");
 
 //		return (int) Math.round((100.0 / (500.0 - 154.0)) * (this.colorTemperature - 154.0));
 
@@ -218,12 +231,14 @@ public class HueBulb {
 	 * @param newState
 	 *            True if the bulb should be turned on at full brightness, false
 	 *            to turn it off.
+	 * @param transitionTime
+	 * 			  The transition time when the brightness is set.	             
 	 */
-	public void setOnAtFullBrightness(boolean newState) {
+	public void setOnAtFullBrightness(boolean newState, int transitionTime) {
 		if (newState) {
-			increaseBrightness(255);
+			increaseBrightness(255, transitionTime);
 		} else {
-			decreaseBrightness(255);
+			decreaseBrightness(255, transitionTime);
 		}
 	}
 
@@ -236,8 +251,10 @@ public class HueBulb {
 	 *            The saturation of the color. (0..255)
 	 * @param brightness
 	 *            The brightness of the color. (0..255)
+	 * @param transitionTime
+	 *            The transition time for when the color is set.           
 	 */
-	private void colorizeByHSBInternally(int hue, int saturation, int brightness) {
+	private void colorizeByHSBInternally(int hue, int saturation, int brightness, int transitionTime) {
 
 		this.hue = hue;
 		this.saturation = saturation;
@@ -245,7 +262,7 @@ public class HueBulb {
 		this.isOn = true;
 
 		String input = "{\"hue\":" + this.hue + ",\"sat\":" + this.saturation
-				+ ",\"bri\":" + this.brightness + ",\"on\":" + this.isOn + "}";
+				+ ",\"bri\":" + this.brightness + ",\"on\":" + this.isOn + ",\"transitiontime\": " + transitionTime + "}";
 		executeMessage(input);
 	}
 
